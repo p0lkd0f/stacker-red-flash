@@ -1,4 +1,5 @@
 import PostItem from "./PostItem";
+import { useState } from "react";
 
 const mockPosts = [
   {
@@ -72,6 +73,16 @@ const mockPosts = [
 ];
 
 const PostList = () => {
+  const [posts, setPosts] = useState(mockPosts);
+
+  const handleZap = (postId: number, amount: number) => {
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { ...post, sats: post.sats + amount }
+        : post
+    ));
+  };
+
   return (
     <div className="bg-background">
       <div className="max-w-4xl mx-auto">
@@ -80,7 +91,7 @@ const PostList = () => {
         </div>
         
         <div className="bg-background px-4">
-          {mockPosts.map((post) => (
+          {posts.map((post) => (
             <PostItem
               key={post.id}
               id={post.id}
@@ -93,6 +104,7 @@ const PostList = () => {
               timeAgo={post.timeAgo}
               category={post.category}
               isTopBoost={post.isTopBoost}
+              onZap={handleZap}
             />
           ))}
         </div>

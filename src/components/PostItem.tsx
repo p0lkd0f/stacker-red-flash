@@ -1,5 +1,9 @@
 import { ArrowUp, MessageCircle, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
+import ZapButton from "./ZapButton";
 
 interface PostItemProps {
   id: number;
@@ -12,6 +16,7 @@ interface PostItemProps {
   timeAgo: string;
   category: string;
   isTopBoost?: boolean;
+  onZap?: (postId: number, amount: number) => void;
 }
 
 const PostItem = ({ 
@@ -24,23 +29,51 @@ const PostItem = ({
   author, 
   timeAgo, 
   category,
-  isTopBoost 
+  isTopBoost,
+  onZap
 }: PostItemProps) => {
+  const [hasVoted, setHasVoted] = useState(false);
+  const [currentSats, setCurrentSats] = useState(sats);
+
+  const handleVote = () => {
+    if (!hasVoted) {
+      const newSats = currentSats + 10;
+      setCurrentSats(newSats);
+      setHasVoted(true);
+      onZap?.(id, 10);
+      toast.success("Upvoted! +10 sats");
+    }
+  };
+
+  const handleZap = (amount: number) => {
+    const newSats = currentSats + amount;
+    setCurrentSats(newSats);
+    onZap?.(id, amount);
+  };
+
   return (
     <div className="flex items-start space-x-3 py-3 border-b border-sn-border last:border-b-0">
       {/* Vote Arrow */}
       <div className="flex flex-col items-center mt-1">
-        <button className="p-1 hover:bg-sn-light-gray rounded transition-colors">
-          <ArrowUp className="h-4 w-4 text-sn-gray hover:text-sn-red" />
+        <button 
+          className={`p-1 hover:bg-sn-light-gray rounded transition-colors ${
+            hasVoted ? 'text-sn-red' : 'text-sn-gray hover:text-sn-red'
+          }`}
+          onClick={handleVote}
+        >
+          <ArrowUp className="h-4 w-4" />
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start space-x-2">
-          <h3 className="text-foreground hover:text-sn-red cursor-pointer transition-colors font-medium leading-tight">
+          <Link 
+            to={`/post/${id}`}
+            className="text-foreground hover:text-sn-red cursor-pointer transition-colors font-medium leading-tight"
+          >
             {title}
-          </h3>
+          </Link>
           {url && (
             <a 
               href={url} 
@@ -60,7 +93,7 @@ const PostItem = ({
         )}
 
         <div className="flex items-center space-x-3 mt-2 text-xs text-sn-text-muted">
-          <span className="font-medium">{sats.toLocaleString()} sats</span>
+          <span className="font-medium">{currentSats.toLocaleString()} sats</span>
           {boost && (
             <>
               <span>\</span>
@@ -68,12 +101,20 @@ const PostItem = ({
             </>
           )}
           <span>\</span>
-          <button className="hover:text-sn-red transition-colors flex items-center space-x-1">
+          <Link 
+            to={`/post/${id}`}
+            className="hover:text-sn-red transition-colors flex items-center space-x-1"
+          >
             <MessageCircle className="h-3 w-3" />
             <span>{comments} comments</span>
-          </button>
+          </Link>
           <span>\</span>
-          <button className="hover:text-sn-red transition-colors">@{author}</button>
+          <Link 
+            to="/profile" 
+            className="hover:text-sn-red transition-colors"
+          >
+            @{author}
+          </Link>
           <span>{timeAgo}</span>
           <Badge 
             variant="secondary" 
@@ -84,6 +125,15 @@ const PostItem = ({
           {isTopBoost && (
             <Badge className="bg-sn-red text-white text-xs">top boost</Badge>
           )}
+        </div>
+
+        {/* Zap Buttons */}
+        <div className="mt-3">
+          <ZapButton 
+            postId={id} 
+            currentSats={currentSats} 
+            onZap={handleZap} 
+          />
         </div>
       </div>
     </div>
