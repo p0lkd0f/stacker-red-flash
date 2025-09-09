@@ -47,6 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "sn-red": "hsl(var(--sn-red))",
+        "sn-red-hover": "hsl(var(--sn-red-hover))",
+        "sn-gray": "hsl(var(--sn-gray))",
+        "sn-light-gray": "hsl(var(--sn-light-gray))",
+        "sn-border": "hsl(var(--sn-border))",
+        "sn-text-muted": "hsl(var(--sn-text-muted))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
