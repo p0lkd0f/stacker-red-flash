@@ -4,65 +4,248 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { getLNClient, getNwcCredentials, setNwcCredentials } from "@/lib/nwc";
-import { fetchInvoiceFromLightningAddress } from "@/lib/lightning";
+import { useNostr } from "@/contexts/NostrContext";
+import { nostrService } from "@/lib/nostr";
+import { Loader2 } from "lucide-react";
 
 interface ZapModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   amount: number; // sats
+  recipientPubkey?: string;
+  postId?: string;
   onPaid?: (amount: number) => void;
 }
 
-const ZapModal = ({ open, onOpenChange, amount, onPaid }: ZapModalProps) => {
-  const [lightningAddress, setLightningAddress] = useState("");
+const ZapModal = ({ open, onOpenChange, amount, recipientPubkey, postId, onPaid }: ZapModalProps) => {
+  const { user, isAuthenticated } = useNostr();
   const [comment, setComment] = useState("");
-  const [invoice, setInvoice] = useState("");
-  const [loadingInvoice, setLoadingInvoice] = useState(false);
+  const [invoice, setInvoice] = useState<any>(null);
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const [paying, setPaying] = useState(false);
-  const [nwcUri, setNwcUri] = useState<string | null>(null);
+  const [recipientProfile, setRecipientProfile] = useState<any>(null);
 
   useEffect(() => {
     if (open) {
-      setInvoice("");
+      setInvoice(null);
       setPaying(false);
-      setLoadingInvoice(false);
-      setNwcUri(getNwcCredentials());
+      setIsCreatingInvoice(false);
+      loadRecipientProfile();
     }
-  }, [open]);
+  }, [open, recipientPubkey]);
 
-  const canPay = useMemo(() => !!invoice && !!nwcUri, [invoice, nwcUri]);
+  const loadRecipientProfile = async () => {
+    if (!recipientPubkey) return;
+    
+    try {
+      const profile = await nostrService.getUserProfile(recipientPubkey);
+      setRecipientProfile(profile);
+    } catch (error) {
+      console.error('Failed to load recipient profile:', error);
+    }
+  };
 
-  const handleGenerateInvoice = async () => {
-    if (!lightningAddress) {
-      toast.error("Enter a lightning address");
+  const canPay = useMemo(() => !!invoice && !!user?.nwcUri, [invoice, user?.nwcUri]);
+
+  const handleCreateZapRequest = async () => {
+    if (!isAuthenticated || !recipientPubkey) {
+      toast.error("Authentication required");
       return;
     }
-    setLoadingInvoice(true);
+    
+    if (!recipientProfile?.lud16) {
+      toast.error("Recipient has no Lightning address configured");
+      return;
+    }
+    
+    setIsCreatingInvoice(true);
     try {
-      const pr = await fetchInvoiceFromLightningAddress(lightningAddress.trim(), amount, comment.trim() || undefined);
-      setInvoice(pr);
-      toast.success("Invoice ready");
+      const zapRequest = {
+        amount,
+        comment: comment.trim(),
+        recipient: recipientPubkey,
+        postId
+      };
+      
+      const createdInvoice = await nostrService.createZapRequest(zapRequest);
+      setInvoice(createdInvoice);
+      toast.success("Zap request created! Ready to pay.");
     } catch (e: any) {
-      toast.error(e?.message || "Failed to generate invoice. You can paste one manually.");
+      toast.error(e?.message || "Failed to create zap request");
     } finally {
-      setLoadingInvoice(false);
+      setIsCreatingInvoice(false);
     }
   };
 
   const handlePay = async () => {
-    if (!invoice) {
-      toast.error("No invoice to pay");
+    if (!invoice || !user?.nwcUri) {
+      toast.error("Invoice or wallet connection missing");
       return;
     }
-    const ln = getLNClient();
-    if (!ln) {
-      toast.error("Connect a Nostr Wallet (NWC) first");
-      return;
-    }
+    
     setPaying(true);
     try {
-      await ln.pay(invoice);
+      const success = await nostrService.payInvoice(invoice);
+      if (success) {
+        toast.success(`⚡ Zapped ${amount} sats!`);
+        onPaid?.(amount);
+        onOpenChange(false);
+      } else {
+        toast.error("Payment failed");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (invoice && !invoice.paid) {
+      // Mark invoice as cancelled
+      toast.info("Zap cancelled");
+    }
+    onOpenChange(false);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Authentication Required</DialogTitle>
+            <DialogDescription>
+              Please connect your Nostr account to send zaps.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!user?.nwcUri) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wallet Connection Required</DialogTitle>
+            <DialogDescription>
+              Please configure your Nostr Wallet Connect (NWC) to send zaps.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleCancel}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Zap {amount} sats</DialogTitle>
+          <DialogDescription>
+            {recipientProfile?.name || 'User'} • {recipientProfile?.lud16 || 'No Lightning address'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {!invoice ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="comment">Comment (optional)</Label>
+                <Input 
+                  id="comment" 
+                  placeholder="Great post! ⚡" 
+                  value={comment} 
+                  onChange={(e) => setComment(e.target.value)}
+                  maxLength={280}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {comment.length}/280 characters
+                </p>
+              </div>
+
+              <div className="bg-muted p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Amount:</span>
+                  <span className="font-bold">{amount} sats</span>
+                </div>
+                {comment && (
+                  <div className="mt-2 pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">Comment:</span>
+                    <p className="text-sm mt-1">{comment}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <h4 className="font-medium text-green-800">⚡ Zap Request Ready</h4>
+                <p className="text-sm text-green-700 mt-1">
+                  Invoice created for {amount} sats
+                </p>
+              </div>
+              
+              {comment && (
+                <div className="bg-muted p-3 rounded-lg">
+                  <span className="text-sm font-medium">Your comment:</span>
+                  <p className="text-sm mt-1">{comment}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+          
+          {!invoice ? (
+            <Button 
+              onClick={handleCreateZapRequest}
+              disabled={isCreatingInvoice || !recipientProfile?.lud16}
+              className="bg-sn-red hover:bg-sn-red-hover"
+            >
+              {isCreatingInvoice ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Zap Request'
+              )}
+            </Button>
+          ) : (
+            <Button 
+              onClick={handlePay} 
+              disabled={!canPay || paying}
+              className="bg-sn-red hover:bg-sn-red-hover"
+            >
+              {paying ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Paying...
+                </>
+              ) : (
+                `Pay ${amount} sats`
+              )}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ZapModal;
       toast.success(`⚡ Paid ${amount} sats`);
       onPaid?.(amount);
       onOpenChange(false);
