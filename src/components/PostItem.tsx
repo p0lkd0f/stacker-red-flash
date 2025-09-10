@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import ZapButton from "./ZapButton";
-
+import ZapModal from "./ZapModal";
 interface PostItemProps {
   id: number;
   title: string;
@@ -34,16 +34,17 @@ const PostItem = ({
 }: PostItemProps) => {
   const [hasVoted, setHasVoted] = useState(false);
   const [currentSats, setCurrentSats] = useState(sats);
-
-  const handleVote = () => {
-    if (!hasVoted) {
-      const newSats = currentSats + 10;
-      setCurrentSats(newSats);
-      setHasVoted(true);
-      onZap?.(id, 10);
-      toast.success("Upvoted! +10 sats");
-    }
-  };
+  const [isUpvoteModalOpen, setIsUpvoteModalOpen] = useState(false);
+const handleVote = () => {
+  if (!hasVoted) {
+    const newSats = currentSats + 10;
+    setCurrentSats(newSats);
+    setHasVoted(true);
+    onZap?.(id, 10);
+    toast.success("Upvoted! +10 sats");
+    setIsUpvoteModalOpen(true);
+  }
+};
 
   const handleZap = (amount: number) => {
     const newSats = currentSats + amount;
@@ -135,6 +136,14 @@ const PostItem = ({
             onZap={handleZap} 
           />
         </div>
+
+        {isUpvoteModalOpen && (
+          <ZapModal
+            open={isUpvoteModalOpen}
+            onOpenChange={setIsUpvoteModalOpen}
+            amount={10}
+          />
+        )}
       </div>
     </div>
   );

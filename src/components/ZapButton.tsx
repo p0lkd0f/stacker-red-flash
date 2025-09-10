@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import ZapModal from "@/components/ZapModal";
 
 interface ZapButtonProps {
   postId: number;
@@ -10,21 +10,14 @@ interface ZapButtonProps {
 }
 
 const ZapButton = ({ postId, currentSats, onZap }: ZapButtonProps) => {
-  const [isZapping, setIsZapping] = useState(false);
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+
   const zapAmounts = [21, 100, 500, 1000];
 
-  const handleZap = async (amount: number) => {
-    setIsZapping(true);
-    
-    // Simulate zapping delay
-    setTimeout(() => {
-      onZap(amount);
-      setIsZapping(false);
-      toast.success(`⚡ Zapped ${amount} sats!`, {
-        description: "Your sats have been sent to the author"
-      });
-    }, 500);
+  const openZap = (amount: number) => {
+    setSelectedAmount(amount);
+    setIsModalOpen(true);
   };
 
   return (
@@ -34,14 +27,24 @@ const ZapButton = ({ postId, currentSats, onZap }: ZapButtonProps) => {
           key={amount}
           size="sm"
           variant="outline"
-          className="h-6 px-2 text-xs border-sn-red text-sn-red hover:bg-sn-red hover:text-white transition-all duration-200"
-          onClick={() => handleZap(amount)}
-          disabled={isZapping}
+          className="h-6 px-2 text-xs"
+          onClick={() => openZap(amount)}
         >
           <Zap className="h-3 w-3 mr-1" />
           {amount}
         </Button>
       ))}
+
+      {selectedAmount !== null && (
+        <ZapModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          amount={selectedAmount}
+          onPaid={(amt) => {
+            onZap(amt);
+          }}
+        />
+      )}
     </div>
   );
 };

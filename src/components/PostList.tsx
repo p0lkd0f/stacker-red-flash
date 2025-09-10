@@ -111,7 +111,7 @@ const PostList = ({ sortType }: PostListProps) => {
           pull down to refresh
         </div>
         
-        <div className="bg-background px-4">
+        <div className="bg-background px-4" aria-live="polite">
           {sortedPosts.map((post) => (
             <PostItem
               key={post.id}
