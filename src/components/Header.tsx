@@ -1,10 +1,19 @@
 import { Search, User, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const navItems = [
+    { path: "/", label: "hot" },
+    { path: "/recent", label: "recent" },
+    { path: "/random", label: "random" },
+    { path: "/top", label: "top" },
+  ];
 
   return (
     <header className="border-b border-sn-border bg-background">
@@ -21,10 +30,19 @@ const Header = () => {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-foreground hover:text-sn-red transition-colors">home</Link>
-            <button className="text-foreground hover:text-sn-red transition-colors">hot</button>
-            <button className="text-sn-text-muted hover:text-sn-red transition-colors">recent</button>
-            <button className="text-sn-text-muted hover:text-sn-red transition-colors">random</button>
-            <button className="text-sn-text-muted hover:text-sn-red transition-colors">top</button>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`transition-colors ${
+                  currentPath === item.path
+                    ? 'text-sn-red font-medium'
+                    : 'text-sn-text-muted hover:text-sn-red'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Search and User Actions */}

@@ -19,6 +19,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/hot" element={<Index />} />
+          <Route path="/recent" element={<Index />} />
+          <Route path="/random" element={<Index />} />
+          <Route path="/top" element={<Index />} />
           <Route path="/post/:id" element={<PostDetail />} />
           <Route path="/create" element={<CreatePost />} />
           <Route path="/profile" element={<Profile />} />

@@ -1,5 +1,9 @@
-import PostItem from "./PostItem";
 import { useState } from "react";
+import PostItem from "./PostItem";
+
+interface PostListProps {
+  sortType: string;
+}
 
 const mockPosts = [
   {
@@ -72,8 +76,23 @@ const mockPosts = [
   }
 ];
 
-const PostList = () => {
+const PostList = ({ sortType }: PostListProps) => {
   const [posts, setPosts] = useState(mockPosts);
+
+  // Sort posts based on sortType
+  const getSortedPosts = () => {
+    switch (sortType) {
+      case 'recent':
+        return [...posts].sort((a, b) => b.id - a.id);
+      case 'top':
+        return [...posts].sort((a, b) => b.sats - a.sats);
+      case 'random':
+        return [...posts].sort(() => Math.random() - 0.5);
+      case 'hot':
+      default:
+        return [...posts].sort((a, b) => (b.sats + b.comments * 50) - (a.sats + a.comments * 50));
+    }
+  };
 
   const handleZap = (postId: number, amount: number) => {
     setPosts(prev => prev.map(post => 
@@ -83,6 +102,8 @@ const PostList = () => {
     ));
   };
 
+  const sortedPosts = getSortedPosts();
+
   return (
     <div className="bg-background">
       <div className="max-w-4xl mx-auto">
@@ -91,7 +112,7 @@ const PostList = () => {
         </div>
         
         <div className="bg-background px-4">
-          {posts.map((post) => (
+          {sortedPosts.map((post) => (
             <PostItem
               key={post.id}
               id={post.id}
