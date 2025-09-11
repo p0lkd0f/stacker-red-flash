@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ArrowUp, MessageCircle, Share, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,20 +7,62 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import ZapButton from "@/components/ZapButton";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
 
 const PostDetail = () => {
   const { id } = useParams();
   const [comment, setComment] = useState("");
-  const [postSats, setPostSats] = useState(3677);
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [hasVoted, setHasVoted] = useState(false);
 
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles (
+              username,
+              display_name
+            )
+          `)
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching post:', error);
+          toast.error('Failed to load post');
+          return;
+        }
+
+        setPost(data);
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Failed to load post');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [id]);
+
   const handleZap = (amount: number) => {
-    setPostSats(prev => prev + amount);
+    if (post) {
+      setPost(prev => ({ ...prev, total_sats: prev.total_sats + amount }));
+    }
   };
 
   const handleVote = () => {
     if (!hasVoted) {
-      setPostSats(prev => prev + 10);
+      if (post) {
+        setPost(prev => ({ ...prev, total_sats: prev.total_sats + 10 }));
+      }
       setHasVoted(true);
       toast.success("Upvoted! +10 sats");
     }
@@ -32,6 +74,19 @@ const PostDetail = () => {
       setComment("");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-sn-red border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,44 +114,53 @@ const PostDetail = () => {
                   <ArrowUp className="h-5 w-5" />
                 </Button>
                 <span className="text-sm font-medium text-sn-text-muted">
-                  {postSats.toLocaleString()}
+                  {post?.total_sats?.toLocaleString() || 0}
                 </span>
               </div>
               
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-foreground mb-2">
-                  Wasabi Wallet v2.7.0 released | Privacy wallet for Bitcoin only
+                  {post?.title || 'Post not found'}
                 </h1>
                 
                 <div className="flex items-center space-x-3 text-sm text-sn-text-muted mb-4">
-                  <span>by <strong className="text-foreground">@kruw</strong></span>
+                  <span>by <strong className="text-foreground">
+                    @{post?.profiles?.username || post?.profiles?.display_name || 'anonymous'}
+                  </strong></span>
                   <span>•</span>
-                  <span>1 Sep 2025</span>
+                  <span>{post?.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : ''}</span>
                   <span>•</span>
-                  <Badge variant="secondary" className="bg-sn-light-gray">bitcoin</Badge>
-                  <Badge className="bg-sn-red text-white">top boost</Badge>
+                  <Badge variant="secondary" className="bg-sn-light-gray">{post?.category}</Badge>
+                  {post?.is_top_boost && (
+                    <Badge className="bg-sn-red text-white">top boost</Badge>
+                  )}
                 </div>
                 
-                <div className="prose max-w-none mb-6">
-                  <p className="text-foreground leading-relaxed">
-                    Wasabi Wallet v2.7.0 has been released with significant improvements to privacy and user experience. 
-                    This update includes enhanced coinjoin coordination, improved fee estimation, and better wallet synchronization.
-                  </p>
-                  <p className="text-foreground leading-relaxed mt-4">
-                    Key features in this release:
-                  </p>
-                  <ul className="list-disc list-inside text-foreground space-y-1 mt-2">
-                    <li>Enhanced privacy with improved coinjoin mixing</li>
-                    <li>Better fee estimation algorithms</li>
-                    <li>Faster wallet synchronization</li>
-                    <li>UI/UX improvements across the board</li>
-                  </ul>
-                </div>
+                {post?.url && (
+                  <div className="mb-4">
+                    <a 
+                      href={post.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sn-red hover:text-sn-red-hover underline"
+                    >
+                      {post.url}
+                    </a>
+                  </div>
+                )}
+                
+                {post?.content && (
+                  <div className="prose max-w-none mb-6">
+                    <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                      {post.content}
+                    </p>
+                  </div>
+                )}
                 
                 <div className="flex items-center space-x-4 mb-6">
                   <ZapButton 
                     postId={id || "0"} 
-                    currentSats={postSats} 
+                    currentSats={post?.total_sats || 0} 
                     onZap={handleZap}
                   />
                   <Button variant="outline" size="sm" className="border-sn-border">
@@ -113,7 +177,7 @@ const PostDetail = () => {
         <div className="bg-card border border-sn-border rounded-lg p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <MessageCircle className="h-5 w-5 mr-2" />
-            Comments (16)
+            Comments ({post?.total_comments || 0})
           </h2>
           
           <div className="mb-6">
@@ -132,28 +196,13 @@ const PostDetail = () => {
           </div>
           
           {/* Sample Comments */}
-          <div className="space-y-4">
-            <div className="border-l-2 border-sn-red pl-4">
-              <div className="flex items-center space-x-2 text-sm text-sn-text-muted mb-2">
-                <strong className="text-foreground">@bitcoiner123</strong>
-                <span>•</span>
-                <span>2h ago</span>
-              </div>
-              <p className="text-foreground">
-                Great update! The new coinjoin features are working perfectly. Privacy is getting better with each release.
-              </p>
-            </div>
-            
-            <div className="border-l-2 border-sn-border pl-4">
-              <div className="flex items-center space-x-2 text-sm text-sn-text-muted mb-2">
-                <strong className="text-foreground">@privacyfirst</strong>
-                <span>•</span>
-                <span>4h ago</span>
-              </div>
-              <p className="text-foreground">
-                The fee estimation improvements are noticeable. Much more accurate now!
-              </p>
-            </div>
+          <div className="text-center py-8">
+            <MessageCircle className="h-12 w-12 text-sn-text-muted mx-auto mb-4" />
+            <p className="text-sn-text-muted">
+              {post?.total_comments === 0 
+                ? "No comments yet. Be the first to comment!" 
+                : "Comments will be loaded here."}
+            </p>
           </div>
         </div>
       </div>
