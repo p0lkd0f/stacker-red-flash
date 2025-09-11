@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import ZapModal from "@/components/ZapModal";
 
 interface ZapButtonProps {
-  postId: number;
+  postId: string;
   currentSats: number;
   onZap: (amount: number) => void;
 }

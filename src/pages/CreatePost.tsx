@@ -7,10 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { usePosts } from "@/hooks/usePosts";
 import { toast } from "sonner";
 
 const CreatePost = () => {
   const navigate = useNavigate();
+  const { createPost } = usePosts();
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
@@ -28,31 +31,43 @@ const CreatePost = () => {
     { value: "meta", label: "Meta" }
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-    
-    if (!category) {
-      toast.error("Please select a category");
-      return;
-    }
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      if (!title.trim()) {
+        toast.error("Title is required");
+        return;
+      }
 
-    setIsSubmitting(true);
+      if (!category) {
+        toast.error("Please select a category");
+        return;
+      }
 
-    // Simulate post creation
-    setTimeout(() => {
-      toast.success("Post created successfully! 🎉");
-      navigate("/");
-    }, 1000);
-  };
+      setIsSubmitting(true);
+
+      try {
+        const result = await createPost({
+          title: title.trim(),
+          url: url.trim() || undefined,
+          content: text.trim() || undefined,
+          category,
+        });
+
+        if (result) {
+          navigate("/");
+        }
+      } catch (error) {
+        toast.error("Failed to create post");
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background">
+        <Header />
       
       <div className="max-w-2xl mx-auto px-4 py-6">
         <Link 
@@ -168,8 +183,9 @@ const CreatePost = () => {
             </div>
           </form>
         </div>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

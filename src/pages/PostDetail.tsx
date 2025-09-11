@@ -95,9 +95,9 @@ const PostDetail = () => {
                 
                 <div className="flex items-center space-x-4 mb-6">
                   <ZapButton 
-                    postId={parseInt(id || "0")} 
+                    postId={id || "0"} 
                     currentSats={postSats} 
-                    onZap={handleZap} 
+                    onZap={handleZap}
                   />
                   <Button variant="outline" size="sm" className="border-sn-border">
                     <Share className="h-4 w-4 mr-2" />

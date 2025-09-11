@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import ZapButton from "./ZapButton";
 import ZapModal from "./ZapModal";
 interface PostItemProps {
-  id: number;
+  id: string;
   title: string;
   url?: string;
   sats: number;
@@ -16,7 +16,7 @@ interface PostItemProps {
   timeAgo: string;
   category: string;
   isTopBoost?: boolean;
-  onZap?: (postId: number, amount: number) => void;
+  onZap?: (postId: string, amount: number) => void;
 }
 
 const PostItem = ({ 

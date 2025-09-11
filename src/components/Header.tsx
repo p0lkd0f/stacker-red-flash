@@ -1,12 +1,14 @@
-import { Search, User, Bell } from "lucide-react";
+import { Search, User, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { path: "/", label: "hot" },
@@ -55,22 +57,42 @@ const Header = () => {
               />
             </div>
             
-            <Button 
-              variant="default" 
-              className="bg-sn-red hover:bg-sn-red-hover text-white font-medium px-6"
-              onClick={() => navigate("/create")}
-            >
-              post
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <Bell className="h-5 w-5 text-sn-text-muted hover:text-sn-red cursor-pointer" />
-              <Link to="/profile" className="flex items-center space-x-1 hover:text-sn-red transition-colors">
-                <User className="h-5 w-5 text-sn-text-muted" />
-                <span className="text-sm text-sn-text-muted">@anon</span>
-                <div className="w-4 h-4 bg-sn-red rounded text-white text-xs flex items-center justify-center">⚡</div>
-              </Link>
-            </div>
+            {user ? (
+              <>
+                <Button 
+                  variant="default" 
+                  className="bg-sn-red hover:bg-sn-red-hover text-white font-medium px-6"
+                  onClick={() => navigate("/create")}
+                >
+                  post
+                </Button>
+                
+                <div className="flex items-center space-x-2">
+                  <Bell className="h-5 w-5 text-sn-text-muted hover:text-sn-red cursor-pointer" />
+                  <Link to="/profile" className="flex items-center space-x-1 hover:text-sn-red transition-colors">
+                    <User className="h-5 w-5 text-sn-text-muted" />
+                    <span className="text-sm text-sn-text-muted">@{user.email?.split('@')[0]}</span>
+                    <div className="w-4 h-4 bg-sn-red rounded text-white text-xs flex items-center justify-center">⚡</div>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={signOut}
+                    className="text-sn-text-muted hover:text-sn-red"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Button 
+                variant="default" 
+                className="bg-sn-red hover:bg-sn-red-hover text-white font-medium px-6"
+                onClick={() => navigate("/auth")}
+              >
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
       </div>
