@@ -14,16 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          post_id: string
+          total_sats: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+          total_sats?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          total_sats?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          boost_amount: number | null
+          category: string
+          content: string | null
+          created_at: string | null
+          id: string
+          is_top_boost: boolean | null
+          title: string
+          total_comments: number | null
+          total_sats: number | null
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          author_id: string
+          boost_amount?: number | null
+          category: string
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_top_boost?: boolean | null
+          title: string
+          total_comments?: number | null
+          total_sats?: number | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          author_id?: string
+          boost_amount?: number | null
+          category?: string
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_top_boost?: boolean | null
+          title?: string
+          total_comments?: number | null
+          total_sats?: number | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          lightning_address: string | null
+          total_followers: number | null
+          total_posts: number | null
+          total_sats_earned: number | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          lightning_address?: string | null
+          total_followers?: number | null
+          total_posts?: number | null
+          total_sats_earned?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          lightning_address?: string | null
+          total_followers?: number | null
+          total_posts?: number | null
+          total_sats_earned?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zaps: {
+        Row: {
+          amount_sats: number
+          comment: string | null
+          comment_id: string | null
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          invoice: string | null
+          payment_hash: string | null
+          post_id: string | null
+          status: string | null
+          to_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount_sats: number
+          comment?: string | null
+          comment_id?: string | null
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          invoice?: string | null
+          payment_hash?: string | null
+          post_id?: string | null
+          status?: string | null
+          to_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount_sats?: number
+          comment?: string | null
+          comment_id?: string | null
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          invoice?: string | null
+          payment_hash?: string | null
+          post_id?: string | null
+          status?: string | null
+          to_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zaps_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zaps_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +358,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
