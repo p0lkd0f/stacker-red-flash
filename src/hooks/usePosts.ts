@@ -31,7 +31,7 @@ export const usePosts = (sortType: string = 'hot') => {
           .from('posts')
           .select(`
             *,
-            profiles (
+            profiles!posts_author_id_fkey (
               username,
               display_name
             )
@@ -105,7 +105,7 @@ export const usePosts = (sortType: string = 'hot') => {
         }])
         .select(`
           *,
-          profiles (
+          profiles!posts_author_id_fkey (
             username,
             display_name
           )
