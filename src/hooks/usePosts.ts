@@ -30,11 +30,7 @@ export const usePosts = (sortType: string = 'hot') => {
         let query = supabase
           .from('posts')
           .select(`
-            *,
-            profiles!posts_author_id_fkey (
-              username,
-              display_name
-            )
+            *
           `);
 
         // Apply sorting
@@ -64,7 +60,18 @@ export const usePosts = (sortType: string = 'hot') => {
           return;
         }
 
-        setPosts((data as unknown as Post[]) || []);
+        const postsData = (data as any[]) || [];
+        const authorIds = Array.from(new Set(postsData.map(p => p.author_id).filter(Boolean)));
+        let profilesMap: Record<string, { username: string | null; display_name: string | null }> = {};
+        if (authorIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username, display_name')
+            .in('id', authorIds);
+          profilesMap = Object.fromEntries((profilesData || []).map((p: any) => [p.id, { username: p.username, display_name: p.display_name }]));
+        }
+        const enrichedPosts = postsData.map(p => ({ ...p, profiles: profilesMap[p.author_id] ?? null }));
+        setPosts(enrichedPosts as Post[]);
       } catch (error) {
         console.error('Error:', error);
         toast.error('Failed to load posts');
@@ -104,11 +111,7 @@ export const usePosts = (sortType: string = 'hot') => {
           author_id: userData.user.id
         }])
         .select(`
-          *,
-          profiles!posts_author_id_fkey (
-            username,
-            display_name
-          )
+          *
         `)
         .single();
 
@@ -118,9 +121,18 @@ export const usePosts = (sortType: string = 'hot') => {
         return null;
       }
 
-      setPosts(prev => [data as unknown as Post, ...prev]);
+      // enrich with author's profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, display_name')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+
+      const enriched = { ...(data as any), profiles: profile ? { username: profile.username, display_name: profile.display_name } : null };
+
+      setPosts(prev => [enriched as Post, ...prev]);
       toast.success('Post created successfully!');
-      return data;
+      return enriched;
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to create post');
