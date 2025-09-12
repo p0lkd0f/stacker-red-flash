@@ -21,14 +21,18 @@ const CreatePost = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = [
-    { value: "bitcoin", label: "Bitcoin" },
-    { value: "AskSN", label: "AskSN" },
-    { value: "tech", label: "Tech" },
-    { value: "AI", label: "AI" },
-    { value: "security", label: "Security" },
-    { value: "BooksAndArticles", label: "Books & Articles" },
-    { value: "jobs", label: "Jobs" },
-    { value: "meta", label: "Meta" }
+    { value: "web-app", label: "Web Application Security" },
+    { value: "mobile", label: "Mobile Security" },
+    { value: "api", label: "API Security" },
+    { value: "cloud", label: "Cloud Security" },
+    { value: "network", label: "Network Security" },
+    { value: "crypto", label: "Cryptography" },
+    { value: "osint", label: "OSINT" },
+    { value: "social-eng", label: "Social Engineering" },
+    { value: "hardware", label: "Hardware Security" },
+    { value: "reverse-eng", label: "Reverse Engineering" },
+    { value: "malware", label: "Malware Analysis" },
+    { value: "physical", label: "Physical Security" }
   ];
 
     const handleSubmit = async (e: React.FormEvent) => {
