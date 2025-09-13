@@ -165,6 +165,53 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_config: {
+        Row: {
+          admin_key: string | null
+          api_key: string | null
+          balance_sats: number | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          lnbits_url: string | null
+          updated_at: string | null
+          user_id: string
+          wallet_type: string
+        }
+        Insert: {
+          admin_key?: string | null
+          api_key?: string | null
+          balance_sats?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lnbits_url?: string | null
+          updated_at?: string | null
+          user_id: string
+          wallet_type?: string
+        }
+        Update: {
+          admin_key?: string | null
+          api_key?: string | null
+          balance_sats?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lnbits_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_config_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zaps: {
         Row: {
           amount_sats: number
@@ -236,6 +283,23 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_posts: {
+        Args: { search_term: string }
+        Returns: {
+          author_id: string
+          boost_amount: number
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_top_boost: boolean
+          title: string
+          total_comments: number
+          total_sats: number
+          updated_at: string
+          url: string
+        }[]
       }
     }
     Enums: {
