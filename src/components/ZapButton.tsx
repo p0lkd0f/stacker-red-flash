@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ZapModal from "@/components/ZapModal";
+import AdvancedZapModal from "@/components/AdvancedZapModal";
 
 interface ZapButtonProps {
   postId: string;
@@ -36,9 +36,10 @@ const ZapButton = ({ postId, currentSats, onZap }: ZapButtonProps) => {
       ))}
 
       {selectedAmount !== null && (
-        <ZapModal
+        <AdvancedZapModal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
+          postId={postId}
           amount={selectedAmount}
           onPaid={(amt) => {
             onZap(amt);
