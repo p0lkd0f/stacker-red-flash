@@ -6,14 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import EditProfileModal from "@/components/EditProfileModal";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePosts } from "@/hooks/usePosts";
 
 const Profile = () => {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, refetchProfile } = useProfile();
   const { posts, loading: postsLoading } = usePosts();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Filter posts by current user
   const userPosts = posts.filter(post => post.author_id === user?.id);
@@ -72,7 +74,12 @@ const Profile = () => {
                 </div>
               </div>
               
-              <Button variant="outline" size="sm" className="border-sn-border">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-sn-border"
+                onClick={() => setIsEditModalOpen(true)}
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Profile
               </Button>
@@ -174,6 +181,13 @@ const Profile = () => {
               </div>
             </TabsContent>
           </Tabs>
+          
+          <EditProfileModal
+            open={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            profile={profile}
+            onProfileUpdated={refetchProfile}
+          />
         </div>
       </div>
     </ProtectedRoute>

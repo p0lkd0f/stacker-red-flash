@@ -21,18 +21,16 @@ const ZapButton = ({ postId, currentSats, onZap }: ZapButtonProps) => {
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex flex-col items-center space-y-1">
       {zapAmounts.map((amount) => (
-        <Button
+        <button
           key={amount}
-          size="sm"
-          variant="outline"
-          className="h-6 px-2 text-xs"
+          className="group flex items-center justify-center w-8 h-6 text-xs font-medium text-sn-text-muted hover:text-sn-red hover:bg-sn-red/10 rounded transition-all duration-200 hover:scale-105"
           onClick={() => openZap(amount)}
         >
-          <Zap className="h-3 w-3 mr-1" />
-          {amount}
-        </Button>
+          <Zap className="h-3 w-3 mr-0.5 fill-current" />
+          <span>{amount}</span>
+        </button>
       ))}
 
       {selectedAmount !== null && (

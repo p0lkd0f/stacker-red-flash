@@ -77,5 +77,31 @@ export const useProfile = (userId?: string) => {
     }
   };
 
-  return { profile, loading, updateProfile };
+  const refetchProfile = async () => {
+    if (!targetUserId) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', targetUserId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        toast.error('Failed to load profile');
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { profile, loading, updateProfile, refetchProfile };
 };

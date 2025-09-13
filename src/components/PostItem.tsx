@@ -54,8 +54,8 @@ const handleVote = () => {
 
   return (
     <div className="flex items-start space-x-3 py-3 border-b border-sn-border last:border-b-0">
-      {/* Vote Arrow */}
-      <div className="flex flex-col items-center mt-1">
+      {/* Vote Arrow and Zap Buttons */}
+      <div className="flex flex-col items-center mt-1 space-y-2">
         <button 
           className={`p-1 hover:bg-sn-light-gray rounded transition-colors ${
             hasVoted ? 'text-sn-red' : 'text-sn-gray hover:text-sn-red'
@@ -64,6 +64,15 @@ const handleVote = () => {
         >
           <ArrowUp className="h-4 w-4" />
         </button>
+        
+        {/* Zap Buttons positioned under upvote */}
+        <div className="flex flex-col items-center space-y-1">
+          <ZapButton 
+            postId={id} 
+            currentSats={currentSats} 
+            onZap={handleZap} 
+          />
+        </div>
       </div>
 
       {/* Content */}
@@ -126,15 +135,6 @@ const handleVote = () => {
           {isTopBoost && (
             <Badge className="bg-sn-red text-white text-xs">top boost</Badge>
           )}
-        </div>
-
-        {/* Zap Buttons */}
-        <div className="mt-3">
-          <ZapButton 
-            postId={id} 
-            currentSats={currentSats} 
-            onZap={handleZap} 
-          />
         </div>
 
         {isUpvoteModalOpen && (
