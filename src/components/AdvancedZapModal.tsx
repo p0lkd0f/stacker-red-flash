@@ -78,7 +78,21 @@ const AdvancedZapModal = ({ open, onOpenChange, postId, amount: defaultAmount, o
 
     setLoading(true);
     try {
-      // Process the zap through our edge function
+      // 1) Verify payment with backend (LND)
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-invoice', {
+        body: {
+          paymentHash: paymentHash,
+          invoice: invoice,
+        }
+      });
+      if (verifyError) throw verifyError;
+
+      if (!verifyData?.settled) {
+        toast.info("Payment not detected yet. Please complete the payment and try again.");
+        return;
+      }
+
+      // 2) Record the zap as paid
       const { data, error } = await supabase.functions.invoke('process-zap', {
         body: {
           postId: postId,
