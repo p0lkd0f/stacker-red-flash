@@ -28,7 +28,7 @@ const ZapButton = ({ postId, currentSats, onZap }: ZapButtonProps) => {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         postId={postId}
-        amount={100} // Default amount, user can change in modal
+        amount={100} // Default starting value, user can change it
         onPaid={(amt) => {
           onZap(amt);
         }}
