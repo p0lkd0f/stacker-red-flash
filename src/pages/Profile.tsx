@@ -74,15 +74,26 @@ const Profile = () => {
                 </div>
               </div>
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-sn-border"
-                onClick={() => setIsEditModalOpen(true)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-sn-border"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Link to="/settings">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-sn-border"
+                  >
+                    Settings
+                  </Button>
+                </Link>
+              </div>
             </div>
             
             {/* Stats */}
